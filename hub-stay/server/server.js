@@ -65,8 +65,8 @@ app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/payments', require('./routes/payments'));
 
-// SPA fallback
-app.get(['/', '/{*splat}'], (req, res) => {
+// SPA fallback - must be LAST
+app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ message: 'API endpoint not found' });
   }
