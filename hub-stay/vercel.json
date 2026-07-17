@@ -1,0 +1,21 @@
+{
+  "buildCommand": "echo 'No build step required'",
+  "outputDirectory": "client",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "node",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/server/server.js"
+    },
+    {
+      "source": "/client/(.*)",
+      "destination": "/client/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/server/server.js"
+    }
+  ]
+}
