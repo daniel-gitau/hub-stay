@@ -10,28 +10,18 @@
       "maxDuration": 30
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/server/server.js"
+      "src": "/api/(.*)",
+      "dest": "/server/server.js"
     },
     {
-      "source": "/client/(.*)",
-      "destination": "/client/$1"
+      "src": "/client/(.*)",
+      "dest": "/client/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/server/server.js"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/client/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-        { "key": "Pragma", "value": "no-cache" },
-        { "key": "Expires", "value": "0" }
-      ]
+      "src": "/(.*)",
+      "dest": "/server/server.js"
     }
   ]
 }
