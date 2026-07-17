@@ -9,31 +9,44 @@ const config = require('./config/keys');
 const app = express();
 
 // Cached DB connection for serverless
-let isConnected = false;
+let cachedDb = null;
 const connectDBOnce = async () => {
-  if (isConnected) return;
+  if (cachedDb && mongoose.connection.readyState === 1) {
+    return cachedDb;
+  }
   try {
-    await connectDB();
-    isConnected = true;
+    const conn = await connectDB();
+    cachedDb = conn;
+    return conn;
   } catch (err) {
     console.error('DB connection error:', err.message);
+    throw err;
   }
 };
 
+// Connect on cold start
 connectDBOnce();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api/') && mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ message: 'Database not connected' });
+// DB check middleware
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    try {
+      await connectDBOnce();
+      if (mongoose.connection.readyState !== 1) {
+        return res.status(503).json({ message: 'Database not connected' });
+      }
+    } catch (err) {
+      return res.status(503).json({ message: 'Database connection failed' });
+    }
   }
   next();
 });
 
-// Static files (served by Vercel's @vercel/static build)
+// Static files
 app.use('/client', express.static(path.join(__dirname, '..', 'client'), {
   setHeaders: (res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -52,7 +65,7 @@ app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/payments', require('./routes/payments'));
 
-// SPA fallback (only for non-API routes)
+// SPA fallback
 app.get('/{*splat}', (req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ message: 'API endpoint not found' });
@@ -65,10 +78,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Internal server error' });
 });
 
-// Export for Vercel serverless
+// Export for Vercel
 module.exports = app;
 
-// Local dev only
+// Local dev
 if (require.main === module) {
   const PORT = config.port;
   app.listen(PORT, () => console.log(`Hub Stay server running on port ${PORT}`));
