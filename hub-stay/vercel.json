@@ -1,12 +1,51 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "builds": [
-    { "src": "server/server.js", "use": "@vercel/node" },
-    { "src": "client/**/*", "use": "@vercel/static" }
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "client-react/dist",
+  "installCommand": "npm install && cd server && npm install && cd ../client-react && npm install",
+  "devCommand": "npm run dev",
+  "regions": ["iad1"],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/server/server.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/client-react/dist/index.html"
+    }
   ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/server/server.js" },
-    { "src": "/client/(.*)", "dest": "/client/$1" },
-    { "src": "/(.*)", "dest": "/server/server.js" }
-  ]
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
